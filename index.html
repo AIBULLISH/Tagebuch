@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Cemal & Tanja</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Arial, sans-serif;
+      background: #f4f1ec;
+      color: #1d1d1f;
+    }
+
+    /* =========================
+       PASSWORT
+    ========================= */
+
+    #login {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      padding: 35px 28px;
+      border-radius: 24px;
+      box-shadow: 0 15px 50px rgba(0,0,0,.08);
+      text-align: center;
+    }
+
+    .lock {
+      font-size: 38px;
+      margin-bottom: 15px;
+    }
+
+    .login-box h1 {
+      margin: 0 0 8px;
+      font-size: 25px;
+    }
+
+    .login-box p {
+      margin: 0 0 25px;
+      color: #777;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 13px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .login-box input:focus {
+      border-color: #999;
+    }
+
+    .login-box button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 15px;
+      border: none;
+      border-radius: 13px;
+      background: #1d1d1f;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .error {
+      height: 22px;
+      margin-top: 12px;
+      color: #c62828;
+      font-size: 14px;
+    }
+
+
+    /* =========================
+       NAMEN AUSWÄHLEN
+    ========================= */
+
+    #nameSelection {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .name-box {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      padding: 35px 28px;
+      border-radius: 24px;
+      box-shadow: 0 15px 50px rgba(0,0,0,.08);
+      text-align: center;
+    }
+
+    .name-box h1 {
+      margin: 0 0 10px;
+    }
+
+    .name-box p {
+      color: #777;
+      margin-bottom: 25px;
+    }
+
+    .name-button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 13px;
+      background: #1d1d1f;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+
+    /* =========================
+       CHAT
+    ========================= */
+
+    #chat {
+      display: none;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(15px);
+
+      padding: 17px 20px;
+      border-bottom: 1px solid #e7e4df;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-title {
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    .chat-status {
+      font-size: 12px;
+      color: #777;
+      margin-top: 3px;
+    }
+
+    .logout {
+      border: none;
+      background: #eee;
+      border-radius: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+
+    #messages {
+      flex: 1;
+      width: 100%;
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 25px 18px 110px;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 13px;
+    }
+
+    .message.mine {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: 78%;
+      padding: 11px 14px;
+      border-radius: 17px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+
+    .mine .bubble {
+      background: #1d1d1f;
+      color: white;
+    }
+
+    .sender {
+      font-size: 11px;
+      font-weight: 700;
+      opacity: .65;
+      margin-bottom: 4px;
+    }
+
+    .text {
+      font-size: 16px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .time {
+      font-size: 10px;
+      opacity: .55;
+      margin-top: 5px;
+      text-align: right;
+    }
+
+
+    /* =========================
+       EINGABE
+    ========================= */
+
+    .input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(15px);
+
+      border-top: 1px solid #e7e4df;
+      padding: 12px;
+    }
+
+    .input-inner {
+      max-width: 850px;
+      margin: auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    #messageInput {
+      flex: 1;
+      min-width: 0;
+      padding: 13px 15px;
+      border: 1px solid #ddd;
+      border-radius: 15px;
+      font-size: 16px;
+      outline: none;
+      resize: none;
+    }
+
+    #sendButton {
+      border: none;
+      border-radius: 15px;
+      padding: 0 18px;
+      background: #1d1d1f;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #sendButton:disabled {
+      opacity: .5;
+    }
+
+    @media (max-width: 600px) {
+      .bubble {
+        max-width: 85%;
+      }
+
+      #messages {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .chat-title {
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+
+<!-- =========================
+     PASSWORT
+========================= -->
+
+<section id="login">
+
+  <div class="login-box">
+
+    <div class="lock">🔒</div>
+
+    <h1>Privater Chat</h1>
+
+    <p>Passwort eingeben</p>
+
+    <form id="loginForm">
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Passwort"
+        autocomplete="off"
+      >
+
+      <button type="submit">
+        Öffnen
+      </button>
+
+      <div class="error" id="loginError"></div>
+
+    </form>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     NAMEN
+========================= -->
+
+<section id="nameSelection">
+
+  <div class="name-box">
+
+    <h1>Wer bist du?</h1>
+
+    <p>Wähle deinen Namen</p>
+
+    <button class="name-button" onclick="enterChat('Cemal')">
+      Cemal
+    </button>
+
+    <button class="name-button" onclick="enterChat('Tanja')">
+      Tanja
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =========================
+     CHAT
+========================= -->
+
+<section id="chat">
+
+  <header class="chat-header">
+
+    <div>
+      <div class="chat-title">
+        Cemal & Tanja
+      </div>
+
+      <div class="chat-status" id="status">
+        Verbunden
+      </div>
+    </div>
+
+    <button class="logout" onclick="logout()">
+      Sperren
+    </button>
+
+  </header>
+
+
+  <div id="messages"></div>
+
+
+  <div class="input-area">
+
+    <form class="input-inner" id="messageForm">
+
+      <input
+        id="messageInput"
+        type="text"
+        placeholder="Nachricht schreiben..."
+        autocomplete="off"
+      >
+
+      <button id="sendButton" type="submit">
+        Senden
+      </button>
+
+    </form>
+
+  </div>
+
+</section>
+
+
+<script>
+
+/* =========================================
+   SUPABASE
+========================================= */
+
+const SUPABASE_URL =
+  "https://rpzjzfkiiydmttsgjguu.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_sSrs17N4DDR4-RTyHtCX_Q_cXOPPGLa";
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+/* =========================================
+   PASSWORT HASH
+========================================= */
+
+const PASSWORD_HASH =
+  "78c3fc41a97b2f5cf3b987a5cfee6317f03cc1a45a9e77045b698612720b49db";
+
+
+async function sha256(text) {
+
+  const data = new TextEncoder().encode(text);
+
+  const hashBuffer =
+    await crypto.subtle.digest("SHA-256", data);
+
+  const hashArray =
+    Array.from(new Uint8Array(hashBuffer));
+
+  return hashArray
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+
+/* =========================================
+   PASSWORT LOGIN
+========================================= */
+
+document
+  .getElementById("loginForm")
+  .addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const password =
+      document
+        .getElementById("password")
+        .value
+        .trim()
+        .toLowerCase();
+
+    const hash =
+      await sha256(password);
+
+    if (hash === PASSWORD_HASH) {
+
+      sessionStorage.setItem(
+        "chatUnlocked",
+        "true"
+      );
+
+      showNameSelection();
+
+    } else {
+
+      document
+        .getElementById("loginError")
+        .textContent =
+        "Falsches Passwort.";
+
+    }
+
+  });
+
+
+/* =========================================
+   NAME AUSWAHL
+========================================= */
+
+let currentUser = null;
+
+
+function showNameSelection() {
+
+  document.getElementById("login").style.display = "none";
+
+  document.getElementById("nameSelection").style.display = "flex";
+}
+
+
+function enterChat(name) {
+
+  currentUser = name;
+
+  localStorage.setItem(
+    "chatUser",
+    name
+  );
+
+  document.getElementById("nameSelection").style.display = "none";
+
+  document.getElementById("chat").style.display = "flex";
+
+  loadMessages();
+
+  subscribeToMessages();
+}
+
+
+/* =========================================
+   NACHRICHTEN LADEN
+========================================= */
+
+async function loadMessages() {
+
+  const { data, error } =
+    await supabaseClient
+      .from("messages")
+      .select("*")
+      .order("created_at", {
+        ascending: true
+      });
+
+  if (error) {
+
+    console.error(error);
+
+    document.getElementById("status")
+      .textContent =
+      "Verbindungsfehler";
+
+    return;
+  }
+
+  document
+    .getElementById("messages")
+    .innerHTML = "";
+
+  data.forEach(message => {
+    displayMessage(message);
+  });
+
+  scrollToBottom();
+}
+
+
+/* =========================================
+   NACHRICHT ANZEIGEN
+========================================= */
+
+function displayMessage(message) {
+
+  const container =
+    document.getElementById("messages");
+
+  const wrapper =
+    document.createElement("div");
+
+  wrapper.className =
+    "message " +
+    (message.sender === currentUser
+      ? "mine"
+      : "");
+
+  const bubble =
+    document.createElement("div");
+
+  bubble.className = "bubble";
+
+
+  const sender =
+    document.createElement("div");
+
+  sender.className = "sender";
+
+  sender.textContent =
+    message.sender;
+
+
+  const text =
+    document.createElement("div");
+
+  text.className = "text";
+
+  text.textContent =
+    message.message;
+
+
+  const time =
+    document.createElement("div");
+
+  time.className = "time";
+
+  time.textContent =
+    new Date(message.created_at)
+      .toLocaleTimeString(
+        "de-DE",
+        {
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      );
+
+
+  bubble.appendChild(sender);
+  bubble.appendChild(text);
+  bubble.appendChild(time);
+
+  wrapper.appendChild(bubble);
+
+  container.appendChild(wrapper);
+}
+
+
+/* =========================================
+   NACHRICHT SENDEN
+========================================= */
+
+document
+  .getElementById("messageForm")
+  .addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const input =
+      document.getElementById("messageInput");
+
+    const message =
+      input.value.trim();
+
+    if (!message || !currentUser) {
+      return;
+    }
+
+    const button =
+      document.getElementById("sendButton");
+
+    button.disabled = true;
+
+
+    const { error } =
+      await supabaseClient
+        .from("messages")
+        .insert({
+          sender: currentUser,
+          message: message
+        });
+
+
+    if (error) {
+
+      console.error(error);
+
+      alert(
+        "Nachricht konnte nicht gesendet werden."
+      );
+
+    } else {
+
+      input.value = "";
+
+    }
+
+    button.disabled = false;
+
+    input.focus();
+  });
+
+
+/* =========================================
+   REALTIME
+========================================= */
+
+function subscribeToMessages() {
+
+  supabaseClient
+    .channel("chat-room")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages"
+      },
+      payload => {
+
+        displayMessage(payload.new);
+
+        scrollToBottom();
+
+      }
+    )
+    .subscribe(status => {
+
+      if (status === "SUBSCRIBED") {
+
+        document
+          .getElementById("status")
+          .textContent =
+          "● Online";
+
+      }
+
+    });
+}
+
+
+/* =========================================
+   SCROLL
+========================================= */
+
+function scrollToBottom() {
+
+  setTimeout(() => {
+
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth"
+    });
+
+  }, 50);
+}
+
+
+/* =========================================
+   SPERREN
+========================================= */
+
+function logout() {
+
+  sessionStorage.removeItem(
+    "chatUnlocked"
+  );
+
+  localStorage.removeItem(
+    "chatUser"
+  );
+
+  location.reload();
+}
+
+
+/* =========================================
+   AUTOMATISCH EINLOGGEN
+========================================= */
+
+window.addEventListener("load", () => {
+
+  const unlocked =
+    sessionStorage.getItem(
+      "chatUnlocked"
+    );
+
+  const savedUser =
+    localStorage.getItem(
+      "chatUser"
+    );
+
+  if (unlocked === "true") {
+
+    if (savedUser === "Cemal" ||
+        savedUser === "Tanja") {
+
+      enterChat(savedUser);
+
+    } else {
+
+      showNameSelection();
+
+    }
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
